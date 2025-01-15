@@ -11,11 +11,16 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 
 from model import Tacotron2
+print("Importing data utils")
 from data_utils import TextMelLoader, TextMelCollate
+print("Importing loss function")
 from loss_function import Tacotron2Loss
+print("Importing logger")
 from logger import Tacotron2Logger
+print("Importing hparams")
 from hparams import create_hparams
 
+print("Train.py Started")
 
 def reduce_tensor(tensor, n_gpus):
     rt = tensor.clone()
@@ -165,11 +170,12 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
     torch.manual_seed(hparams.seed)
     torch.cuda.manual_seed(hparams.seed)
 
+    print("Loading Model")
     model = load_model(hparams)
     learning_rate = hparams.learning_rate
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate,
                                  weight_decay=hparams.weight_decay)
-
+    print("Model laoded")
     if hparams.fp16_run:
         from apex import amp
         model, optimizer = amp.initialize(
@@ -256,6 +262,7 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
 
 
 if __name__ == '__main__':
+    print("Train.py")
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output_directory', type=str,
                         help='directory to save checkpoints')
@@ -276,6 +283,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     hparams = create_hparams(args.hparams)
+
+    print(f"Hyperparameters loaded: {hparams}")
 
     torch.backends.cudnn.enabled = hparams.cudnn_enabled
     torch.backends.cudnn.benchmark = hparams.cudnn_benchmark

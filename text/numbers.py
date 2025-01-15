@@ -3,6 +3,7 @@
 import inflect
 import re
 
+print("numbers.py")
 
 _inflect = inflect.engine()
 _comma_number_re = re.compile(r'([0-9][0-9\,]+[0-9])')

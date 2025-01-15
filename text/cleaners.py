@@ -16,6 +16,7 @@ import re
 from unidecode import unidecode
 from .numbers import normalize_numbers
 
+print("cleaners.py")
 
 # Regular expression matching whitespace:
 _whitespace_re = re.compile(r'\s+')
@@ -73,6 +74,7 @@ def basic_cleaners(text):
 
 
 def transliteration_cleaners(text):
+  print("transliteration_cleaners")
   '''Pipeline for non-English text that transliterates to ASCII.'''
   text = convert_to_ascii(text)
   text = lowercase(text)
