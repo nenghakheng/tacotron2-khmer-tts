@@ -1,6 +1,8 @@
 import numpy as np
 from scipy.io.wavfile import read
 import torch
+import os
+import librosa
 
 
 def get_mask_from_lengths(lengths):
@@ -10,9 +12,23 @@ def get_mask_from_lengths(lengths):
     return mask
 
 
-def load_wav_to_torch(full_path):
+def load_wav_to_torch(folder_dir ,full_path, sr):
+
+    if folder_dir == 'train':
+        full_path = os.path.join('datasets/train_datasets/' ,full_path + '.wav')
+    elif folder_dir == 'validation':
+        full_path = os.path.join('datasets/validation_datasets/' ,full_path + '.wav')
+
     sampling_rate, data = read(full_path)
-    return torch.FloatTensor(data.astype(np.float32)), sampling_rate
+
+    # Handle resampling
+    if sampling_rate != sr:
+        data = librosa.resample(data.astype(np.float32), sampling_rate, sr)
+        sampling_rate = sr
+
+    audio_tensor = torch.FloatTensor(data.astype(np.float32))
+
+    return audio_tensor, sampling_rate
 
 
 # def load_filepaths_and_text(filename, split="|"):

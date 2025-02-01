@@ -11,13 +11,9 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.utils.data import DataLoader
 
 from model import Tacotron2
-print("Importing data utils")
 from data_utils import TextMelLoader, TextMelCollate
-print("Importing loss function")
 from loss_function import Tacotron2Loss
-print("Importing logger")
 from logger import Tacotron2Logger
-print("Importing hparams")
 from hparams import create_hparams
 
 print("Train.py Started")
@@ -46,8 +42,12 @@ def init_distributed(hparams, n_gpus, rank, group_name):
 
 def prepare_dataloaders(hparams):
     # Get data, data loaders and collate function ready
-    trainset = TextMelLoader(hparams.training_files, hparams)
-    valset = TextMelLoader(hparams.validation_files, hparams)
+    trainset = TextMelLoader(hparams.training_files, hparams, 'train')
+    valset = TextMelLoader(hparams.validation_files, hparams, 'validation')
+
+    print("Trainset size: {}".format(len(trainset)))
+    print("Valset size: {}".format(len(valset)))
+
     collate_fn = TextMelCollate(hparams.n_frames_per_step)
 
     if hparams.distributed_run:
@@ -170,12 +170,11 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
     torch.manual_seed(hparams.seed)
     torch.cuda.manual_seed(hparams.seed)
 
-    print("Loading Model")
     model = load_model(hparams)
     learning_rate = hparams.learning_rate
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate,
                                  weight_decay=hparams.weight_decay)
-    print("Model laoded")
+    print("Model Loaded")
     if hparams.fp16_run:
         from apex import amp
         model, optimizer = amp.initialize(
@@ -208,8 +207,9 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
 
     model.train()
     is_overflow = False
+    print(epoch_offset)
     # ================ MAIN TRAINNIG LOOP! ===================
-    for epoch in range(epoch_offset, hparams.epochs):
+    for epoch in range(epoch_offset, hparams.epochs + 1):
         print("Epoch: {}".format(epoch))
         for i, batch in enumerate(train_loader):
             start = time.perf_counter()
@@ -252,13 +252,22 @@ def train(output_directory, log_directory, checkpoint_path, warm_start, n_gpus,
                 validate(model, criterion, valset, iteration,
                          hparams.batch_size, n_gpus, collate_fn, logger,
                          hparams.distributed_run, rank)
-                if rank == 0:
-                    checkpoint_path = os.path.join(
-                        output_directory, "checkpoint_{}".format(iteration))
-                    save_checkpoint(model, optimizer, learning_rate, iteration,
-                                    checkpoint_path)
+
+
 
             iteration += 1
+        # Save checkpoint every 10 epochs
+        if epoch % 10 == 0:
+            checkpoint_path = os.path.join(
+                output_directory, "checkpoint_{}".format(epoch))
+            save_checkpoint(model, optimizer, learning_rate, iteration,
+                            checkpoint_path)
+        # Save checkpoint at end of epoch
+        if epoch == hparams.epochs:
+            checkpoint_path = os.path.join(
+                output_directory, "last_checkpoint_{}".format(epoch))
+            save_checkpoint(model, optimizer, learning_rate, iteration,
+                            checkpoint_path)
 
 
 if __name__ == '__main__':

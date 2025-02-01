@@ -1,4 +1,4 @@
-import tensorflow as tf
+# import tensorflow as tf
 import logging
 from text import symbols
 
@@ -35,7 +35,7 @@ def create_hparams(hparams_string=None, verbose=False):
         ################################
         # Experiment Parameters        #
         ################################
-        'epochs': 500,
+        'epochs': 1600,
         'iters_per_checkpoint': 1000,
         'seed': 1234,
         'dynamic_loss_scaling': True,
@@ -51,8 +51,8 @@ def create_hparams(hparams_string=None, verbose=False):
         # Data Parameters             #
         ################################
         'load_mel_from_disk': False,
-        'training_files': 'datasets/train_datasets/line_index.tsv',
-        'validation_files': 'datasets/validation_datasets/line_index.tsv',
+        'training_files': './datasets/train_datasets/line_index.tsv',
+        'validation_files': './datasets/validation_datasets/line_index.tsv',
         'text_cleaners': ['transliteration_cleaners'],
 
         ################################
@@ -107,7 +107,7 @@ def create_hparams(hparams_string=None, verbose=False):
         'learning_rate': 1e-3,
         'weight_decay': 1e-6,
         'grad_clip_thresh': 1.0,
-        'batch_size': 64,
+        'batch_size': 32,
         'mask_padding': True  # set model's padded outputs to padded values
     })
 
